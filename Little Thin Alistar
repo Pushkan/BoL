@@ -1,0 +1,130 @@
+myHero=GetMyHero()
+if myHero.charName ~= "Alistar" then return end
+local version = "0.03"
+local autor = "Pushkan"
+local scriptname = "Little Thin Alistar"
+
+local qRadius = GetDistance(myHero, myHero.minBBox) + 190
+local wRange = 650
+local wPush = 650
+
+local Interrupt = {}
+local InterruptList = {
+        {charName = "Caitlyn", spellName = "CaitlynAceintheHole"},
+        {charName = "FiddleSticks", spellName = "Crowstorm"},
+        {charName = "FiddleSticks", spellName = "DrainChannel"},
+        {charName = "Galio", spellName = "GalioIdolOfDurand"},
+        {charName = "Karthus", spellName = "FallenOne"},
+        {charName = "Katarina", spellName = "KatarinaR"},
+        {charName = "Malzahar", spellName = "AlZaharNetherGrasp"},
+        {charName = "MissFortune", spellName = "MissFortuneBulletTime"},
+        {charName = "Nunu", spellName = "AbsoluteZero"},
+        {charName = "Pantheon", spellName = "Pantheon_GrandSkyfall_Jump"},
+        {charName = "Shen", spellName = "ShenStandUnited"},
+        {charName = "Urgot", spellName = "UrgotSwap2"},
+        {charName = "Varus", spellName = "VarusQ"},
+        {charName = "Warwick", spellName = "InfiniteDuress"}
+        }
+
+
+
+function OnLoad()
+get_table()
+--SOWi = SOW(VP)
+--STS = SimpleTS(STS_PRIORITY_LESS_CAST)
+        
+		
+AMen = scriptConfig("Little Thin Alistar", "LTA")
+		ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, 1400, DAMAGE_MAGIC)
+        ts.name = "Target "
+        AMen:addTS(ts)
+AMen:addParam("Combo","Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+
+AMen:addSubMenu("[Use Ult on]", "H")
+                AMen.H:addParam("r", "Root", SCRIPT_PARAM_ONOFF, true)
+				AMen.H:addParam("s", "Stun", SCRIPT_PARAM_ONOFF, true)
+				AMen.H:addParam("t", "Taunt", SCRIPT_PARAM_ONOFF, true)
+				AMen.H:addParam("f", "Fear", SCRIPT_PARAM_ONOFF, true)
+				AMen.H:addParam("c", "Charm", SCRIPT_PARAM_ONOFF, true)
+				AMen.H:addParam("su", "Supress", SCRIPT_PARAM_ONOFF, true)
+				AMen.H:addParam("sl", "Slow", SCRIPT_PARAM_ONOFF, false)
+                
+            
+		
+     
+--		AMen:addSubMenu("Orbwalking", "Orb")
+ --       SOWi:LoadToMenu(AMen.Orb)
+    --[[    AMen:addSubMenu("Combo Settings", "combo")
+        AMen.combo:addParam("combo", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+        AMen.combo:addParam("WQRange", "WQ Minimum Range", SCRIPT_PARAM_SLICE, wRange, 0, wRange)
+        AMen.combo:addParam("info", "WQ Will Not work at too close range", SCRIPT_PARAM_INFO, "")
+        AMen.combo:addParam("info2", "Recommend set above 375", SCRIPT_PARAM_INFO, "")
+
+		--]]
+
+end
+
+function OnTick()
+	ts:update()
+	Target = ts.target
+	QReady = (myHero:CanUseSpell(_Q) == READY)
+	WReady = (myHero:CanUseSpell(_W) == READY)
+	EReady = (myHero:CanUseSpell(_E) == READY)
+	RReady = (myHero:CanUseSpell(_R) == READY)
+
+Combo()
+end
+
+function Combo()
+	if AMen.Combo and Target ~= nil then
+		if QReady and WReady and GetDistance(Target)<=wRange then
+			Packet("S_CAST", {spellId = _W, targetNetworkId = Target.networkID}):send()
+		end
+		if QReady and GetDistance(Target)<=600 then
+			Packet("S_CAST", {spellId = _Q}):send()
+		end
+	end
+end
+
+
+
+function OnGainBuff(unit, buff)
+
+    if unit == nil or buff == nil then return end
+    if unit.isMe and buff then
+	if (buff.type == 11 and AMen.H.r) or (buff.type == 10 and AMen.H.sl) or (buff.type == 8 and AMen.H.t) or (buff.type == 21 and AMen.H.f) or (buff.type == 22 and AMen.H.c) or (buff.type == 24 and AMen.H.su) then 
+		if RReady then
+       Packet("S_CAST", {spellId = _R}):send()
+		end
+		
+        end
+	end
+end 
+
+function get_table()
+	mytypes={}
+	mytypes["11"] = true
+	mytypes["5"] = true
+	mytypes["8"] = true
+	mytypes["21"] = true
+	mytypes["22"] = true
+	mytypes["24"] = true
+end
+
+--[[function OnLoseBuff(unit, buff)
+
+    if unit == nil or buff == nil then return end
+    if unit.isMe and buff then
+        if buff.type == 17 then
+        boolean = false
+        end
+
+    end
+
+end --]]
+
+function OnDraw()
+if WReady and not myHero.dead then
+	DrawCircle3D(myHero.x, myHero.y, myHero.z, 650, 1, ARGB(70,23,190,23))
+	end
+end
